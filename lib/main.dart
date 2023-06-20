@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:dynamic_height_grid_view/dynamic_height_grid_view.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() {
   runApp(const PhotoApp());
@@ -32,7 +34,7 @@ class PhotoApp extends StatelessWidget {
             seedColor: const Color.fromARGB(255, 24, 61, 33)),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Photo App'),
+      home: const MyHomePage(title: 'Liz Cottrell Photography'),
     );
   }
 }
@@ -56,44 +58,121 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+  var selectedIndex = 0;
+  var showNavRail = false;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Expanded(child: _buildGrid()),
+    Widget page;
+    switch (selectedIndex) {
+      case 0:
+        page = const HomePage();
+        break;
+      case 1:
+        // page = _buildGallery();
+        page = const GalleryPage();
+        break;
+      case 2:
+        page = const FavoritesPage();
+        break;
+      case 3:
+        () async {
+          String email = Uri.encodeComponent("timlocott@hotmail.com");
+          String subject = Uri.encodeComponent("Help Request");
+          String body = Uri.encodeComponent("Hi Liz! I need help with...");
+          Uri mail = Uri.parse("mailto:$email?subject=$subject&body=$body");
+          if (await launchUrl(mail, mode: LaunchMode.externalApplication)) {
+            //email app opened
+            print('Email app opened');
+          } else {
+            //email app is not opened
+            print('Email app not opened');
+          }
+        };
+        page = const HomePage();
+        break;
+      default:
+        throw UnimplementedError('no widget for $selectedIndex');
+    }
+
+    return LayoutBuilder(builder: (context, constraints) {
+      return Scaffold(
+        // body: Row(
+        //   children: [
+        //     SafeArea(
+        //       child: NavigationRail(
+        //         leading: const Text('LC'),
+        //         extended: constraints.maxWidth >= 600,
+        //         destinations: const [
+        //           NavigationRailDestination(
+        //             icon: Icon(Icons.home),
+        //             label: Text('Home'),
+        //           ),
+        //           NavigationRailDestination(
+        //             icon: Icon(Icons.photo_library),
+        //             label: Text('Gallery'),
+        //           ),
+        //         ],
+        //         selectedIndex: selectedIndex,
+        //         onDestinationSelected: (value) {
+        //           setState(() {
+        //             selectedIndex = value;
+        //           });
+        //         },
+        //       ),
+        //     ),
+        //     Expanded(
+        //       child: Container(
+        //         color: Theme.of(context).colorScheme.primaryContainer,
+        //         child: page,
+        //       ),
+        //     ),
+        //   ],
+        // ),
+        body: Column(
+          children: [
+            Expanded(
+              child: Container(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                child: page,
+              ),
+            ),
+            SafeArea(
+              child: NavigationBar(
+                destinations: const [
+                  NavigationDestination(
+                    icon: Icon(Icons.home),
+                    label: 'Home',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.photo_library),
+                    label: 'Gallery',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.favorite),
+                    label: 'Favorites',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.email),
+                    label: 'Email',
+                  ),
+                ],
+                selectedIndex: selectedIndex,
+                onDestinationSelected: (value) {
+                  setState(() {
+                    selectedIndex = value;
+                  });
+                },
+              ),
+            ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
-    );
+      );
+    });
   }
 }
 
-Widget _buildGrid() => GridView.extent(
+Widget _buildGallery() => GridView.extent(
       maxCrossAxisExtent: 300,
       padding: const EdgeInsets.all(10),
       mainAxisSpacing: 4,
@@ -102,4 +181,78 @@ Widget _buildGrid() => GridView.extent(
     );
 
 List<Container> _buildGridTileList(int count) => List.generate(
-    count, (index) => Container(child: Image.asset('images/pic$index.jpg')));
+    count,
+    (index) => Container(
+            child: Stack(
+          children: [
+            Positioned.fill(
+              child: Image.asset(
+                'images/pic$index.jpg',
+                fit: BoxFit.cover,
+              ),
+            ),
+            Align(
+              alignment: Alignment.bottomLeft,
+              child: IconButton(
+                onPressed: () {
+                  print('Favorite Pressed');
+                },
+                icon: const Icon(Icons.favorite_border, color: Colors.white),
+              ),
+            ),
+          ],
+        )));
+
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(child: Text('Home'));
+  }
+}
+
+class GalleryPage extends StatelessWidget {
+  const GalleryPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: DynamicHeightGridView(
+          itemCount: 2,
+          crossAxisCount: 3,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          builder: (context, index) {
+            return Container(
+                child: Stack(
+              children: [
+                Image.asset(
+                  'images/pic$index.jpg',
+                  fit: BoxFit.cover,
+                ),
+                Align(
+                  alignment: Alignment.bottomRight,
+                  child: IconButton(
+                    onPressed: () {
+                      print('Favorite Pressed');
+                    },
+                    icon:
+                        const Icon(Icons.favorite_border, color: Colors.white),
+                  ),
+                ),
+              ],
+            ));
+          }),
+    );
+  }
+}
+
+class FavoritesPage extends StatelessWidget {
+  const FavoritesPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(child: Text('Favorites'));
+  }
+}
