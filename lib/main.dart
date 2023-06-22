@@ -69,27 +69,13 @@ class _MyHomePageState extends State<MyHomePage> {
         page = const HomePage();
         break;
       case 1:
-        // page = _buildGallery();
         page = const GalleryPage();
         break;
       case 2:
         page = const FavoritesPage();
         break;
       case 3:
-        () async {
-          String email = Uri.encodeComponent("timlocott@hotmail.com");
-          String subject = Uri.encodeComponent("Help Request");
-          String body = Uri.encodeComponent("Hi Liz! I need help with...");
-          Uri mail = Uri.parse("mailto:$email?subject=$subject&body=$body");
-          if (await launchUrl(mail, mode: LaunchMode.externalApplication)) {
-            //email app opened
-            print('Email app opened');
-          } else {
-            //email app is not opened
-            print('Email app not opened');
-          }
-        };
-        page = const HomePage();
+        page = const ContactPage();
         break;
       default:
         throw UnimplementedError('no widget for $selectedIndex');
@@ -97,38 +83,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
     return LayoutBuilder(builder: (context, constraints) {
       return Scaffold(
-        // body: Row(
-        //   children: [
-        //     SafeArea(
-        //       child: NavigationRail(
-        //         leading: const Text('LC'),
-        //         extended: constraints.maxWidth >= 600,
-        //         destinations: const [
-        //           NavigationRailDestination(
-        //             icon: Icon(Icons.home),
-        //             label: Text('Home'),
-        //           ),
-        //           NavigationRailDestination(
-        //             icon: Icon(Icons.photo_library),
-        //             label: Text('Gallery'),
-        //           ),
-        //         ],
-        //         selectedIndex: selectedIndex,
-        //         onDestinationSelected: (value) {
-        //           setState(() {
-        //             selectedIndex = value;
-        //           });
-        //         },
-        //       ),
-        //     ),
-        //     Expanded(
-        //       child: Container(
-        //         color: Theme.of(context).colorScheme.primaryContainer,
-        //         child: page,
-        //       ),
-        //     ),
-        //   ],
-        // ),
         body: Column(
           children: [
             Expanded(
@@ -154,7 +108,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   NavigationDestination(
                     icon: Icon(Icons.email),
-                    label: 'Email',
+                    label: 'Contact Us',
                   ),
                 ],
                 selectedIndex: selectedIndex,
@@ -171,37 +125,6 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 }
-
-Widget _buildGallery() => GridView.extent(
-      maxCrossAxisExtent: 300,
-      padding: const EdgeInsets.all(10),
-      mainAxisSpacing: 4,
-      crossAxisSpacing: 4,
-      children: _buildGridTileList(2),
-    );
-
-List<Container> _buildGridTileList(int count) => List.generate(
-    count,
-    (index) => Container(
-            child: Stack(
-          children: [
-            Positioned.fill(
-              child: Image.asset(
-                'images/pic$index.jpg',
-                fit: BoxFit.cover,
-              ),
-            ),
-            Align(
-              alignment: Alignment.bottomLeft,
-              child: IconButton(
-                onPressed: () {
-                  print('Favorite Pressed');
-                },
-                icon: const Icon(Icons.favorite_border, color: Colors.white),
-              ),
-            ),
-          ],
-        )));
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -254,5 +177,71 @@ class FavoritesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Center(child: Text('Favorites'));
+  }
+}
+
+class ContactPage extends StatelessWidget {
+  const ContactPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.email),
+                onPressed: () {
+                  const snackBar = SnackBar(
+                    content: Text('Default Mail App Opened'),
+                    showCloseIcon: true,
+                    behavior: SnackBarBehavior.floating,
+                  );
+
+                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                  _openEmailApp();
+                },
+                label: const Text('Email'),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.message),
+                onPressed: () {
+                  const snackBar = SnackBar(
+                    content: Text('Default Texting App Opened'),
+                    showCloseIcon: true,
+                    behavior: SnackBarBehavior.floating,
+                  );
+
+                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                  _openSMSApp();
+                },
+                label: const Text('Message'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+_openEmailApp() async {
+  final Uri url = Uri.parse(
+      "mailto:timlocott@hotmail.com?subject=EmailTest&body=BodyofEmail");
+  if (!await launchUrl(url)) {
+    throw Exception('Could not launch $url');
+  }
+}
+
+_openSMSApp() async {
+  final Uri url = Uri.parse("sms:8015161371?body=Hey+Liz!");
+  if (!await launchUrl(url)) {
+    throw Exception('Could not launch $url');
   }
 }
